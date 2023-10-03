@@ -1,0 +1,82 @@
+---
+title: "stata_transolation"
+format: html
+editor: visual
+---
+
+## Quarto
+
+```{stata}
+* Load necessary libraries
+// Stata doesn't have libraries like R, so no need to load them
+
+* Import the data
+import delimited "data/raw/gsoep.dta", clear
+
+* Define a function to remove negative values
+program remove_negative_values
+    preserve
+    keep if whweek >= 0 & hobbies >= 0 & edu4 > 0
+    restore
+end
+
+* Define a function to create marriage dummies
+program create_marriage_dummies
+    gen married = .
+    gen straight = .
+    gen east = .
+    gen mixed_origin = .
+    gen west = .
+
+    bysort cpf_hid wave: replace married = 1 if _N == 2
+    bysort cpf_hid wave: replace straight = 1 if _N == 2 & female[1] != female[2]
+    bysort cpf_hid wave: replace east = 1 if loc89[_n-1] == 1 & loc89 == 1
+    bysort cpf_hid wave: replace mixed_origin = 1 if loc89[_n-1] != loc89[_n]
+    by cpf_hid wave: replace west = 1 if east == 0 & mixed_origin == 0
+end
+
+* Define a function to generate salary metrics
+program generate_salary_metrics
+    gen wife_earns_more = .
+
+    bysort cpf_hid wave (female): replace wife_earns_more = 1 if married == 1 & straight == 1 & incjob1_mn[_n] < incjob1_mn[_n+1]
+    by cpf_hid wave (female): replace wife_earns_more = 0 if married == 1 & straight == 1 & incjob1_mn[_n] >= incjob1_mn[_n+1]
+end
+
+* Clean the data
+remove_negative_values
+create_marriage_dummies
+generate_salary_metrics
+drop if missing(wife_earns_more)
+
+* Descriptive statistics
+summarize female_income_share if married == 1 & straight == 1 & west == 1 & female == 1, detail
+summarize female_income_share if married == 1 & straight == 1 & east == 1 & female == 1, detail
+
+* Table 2
+egen couple_count = count if married == 1 & straight == 1 & (east == 1 | west == 1)
+tabulate couple_origin if married == 1 & straight == 1 & (east == 1 | west == 1), summarize(couple_count)
+
+egen female_count = count if married == 1 & female == 1 & straight == 1 & (east == 1 | west == 1)
+tabulate couple_origin if married == 1 & female == 1 & straight == 1 & (east == 1 | west == 1), summarize(female_count)
+
+* Define a function to prepare data for regression
+program prepare_for_regression
+    gen hhd_inc = sum(incjob1_mn) if married == 1 & (east == 1 | west == 1)
+    gen lhdd_inc = log(hhd_inc)
+    gen age2 = age^2
+    gen children = 0
+    replace children = 1 if kidsn_hh17 != 0
+    gen east_wife_interaction = east * wife_earns_more if married == 1 & (east == 1 | west == 1)
+end
+
+* Prepare data for regression
+prepare_for_regression
+drop if missing(hwork)
+drop if female == 0
+
+* Run regressions
+regress hwork wife_earns_more east_wife_interaction
+regress hwork wife_earns_more c.east##wife_earns_more##age##age2 wavey
+```
+
