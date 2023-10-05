@@ -89,11 +89,8 @@ test_df |>
     female == 1
   ) |>
   pull(female_income_share) |>
-  median()
-
-  #hist()
-  #density() |>
-  #plot()
+  density() |>
+  plot()
 
 test_df |>
   filter(
@@ -104,7 +101,8 @@ test_df |>
     female == 1
   ) |>
   pull(female_income_share) |>
-  median()
+  density() |>
+  plot()
 
 #TABLE 2
 #in the paper there are 6104 couples both from either west or east
