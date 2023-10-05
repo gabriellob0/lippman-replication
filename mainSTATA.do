@@ -28,7 +28,7 @@ but it does not mean that the partner is in the sample
  */
 keep if whweek >= 0 & incjob1_mg >= 0 & incjob1_mn >= 0
 drop if missing(errand, hwork, repairs, hobbies)
-*drop if edu4 == -1
+drop if edu4 == -1
 
 *Marriage dummies
 gen married = 0
@@ -79,4 +79,52 @@ restore
 preserve
 keep if female == 1 & west == 1
 kdensity female_income_share
+restore
+
+
+*Regression ----
+
+*Age dummies
+gen male_age = .
+gen female_age = .
+
+bysort wave cpf_hid (female): replace male_age = age if female == 0
+bysort wave cpf_hid (female): replace female_age = age if female == 1
+
+bysort wave cpf_hid (female): replace male_age = male_age[1] if missing(male_age)
+bysort wave cpf_hid (female): replace female_age = female_age[2] if missing(female_age)
+
+gen p_age = male_age if female == 1
+replace p_age = female_age if female == 0
+
+drop male_age female_age
+
+*Education dummies
+gen male_ed = .
+gen female_ed = .
+
+bysort wave cpf_hid (female): replace male_ed = edu4 if female == 0
+bysort wave cpf_hid (female): replace female_ed = edu4 if female == 1
+
+bysort wave cpf_hid (female): replace male_ed = male_ed[1] if missing(male_ed)
+bysort wave cpf_hid (female): replace female_ed = female_ed[2] if missing(female_ed)
+
+gen p_edu4 = male_ed if female == 1
+replace p_edu4 = female_ed if female == 0
+
+drop male_ed female_ed
+
+*Other dummies
+*note missing values with log income
+gen lhhd_inc = log(total_incjob1_mn)
+gen age2 = age^2
+gen p_age2 = p_age^2
+gen kids = (kidsn_hh17 != 0)
+gen wife_east = wife_earns_more * east
+
+*reg
+preserve
+keep if female == 1
+regress hwork wife_earns_more wife_east east lhhd_inc age p_age age2 p_age2 kids i.edu4 i.p_edu4 i.wavey i.state
+
 restore
