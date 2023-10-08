@@ -122,9 +122,10 @@ gen p_age2 = p_age^2
 gen kids = (kidsn_hh17 != 0)
 gen wife_east = wife_earns_more * east
 
-*reg
+*Panel A (1)
 preserve
-keep if female == 1
-regress hwork wife_earns_more wife_east east lhhd_inc age p_age age2 p_age2 kids i.edu4 i.p_edu4 i.wavey i.state
-
+keep if female == 1 & west == 1
+regress hwork wife_earns_more lhhd_inc age p_age age2 p_age2 kids i.edu4 i.p_edu4 i.wavey i.state
 restore
+
+*Panel A (2)
