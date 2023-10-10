@@ -26,7 +26,9 @@ if we should remove them, either option gives wrong sample size.
 Importantly, it seems that the parstat6 identifies with a person is married,
 but it does not mean that the partner is in the sample
  */
-keep if whweek >= 0 & incjob1_mg >= 0 & incjob1_mn >= 0
+ 
+ *only dual earner couples here
+keep if whweek >= 0 & incjob1_mg > 0 & incjob1_mn > 0
 drop if missing(errand, hwork, repairs, hobbies)
 drop if edu4 == -1
 
@@ -82,6 +84,35 @@ kdensity female_income_share
 restore
 
 
+* Figure 3 ----
+preserve
+keep if west == 1 & female == 1
+egen fem_share_cat = cut(female_income_share), at(0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1)
+egen mean = mean(hwork), by(fem_share_cat)
+graph twoway line mean fem_share_cat, sort yscale(r(0 4))
+restore
+
+preserve
+keep if east == 1 & female == 1
+egen fem_share_cat = cut(female_income_share), at(0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1)
+egen mean = mean(hwork), by(fem_share_cat)
+graph twoway line mean fem_share_cat, sort yscale(r(0 4))
+restore
+
+preserve
+keep if west == 1 & female == 0
+egen fem_share_cat = cut(female_income_share), at(0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1)
+egen mean = mean(hwork), by(fem_share_cat)
+graph twoway line mean fem_share_cat, sort yscale(r(0 4))
+restore
+
+preserve
+keep if east == 1 & female == 0
+egen fem_share_cat = cut(female_income_share), at(0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1)
+egen mean = mean(hwork), by(fem_share_cat)
+graph twoway line mean fem_share_cat, sort yscale(r(0 4))
+restore
+
 *Regression ----
 
 *Age dummies
@@ -125,7 +156,17 @@ gen wife_east = wife_earns_more * east
 *Panel A (1)
 preserve
 keep if female == 1 & west == 1
-regress hwork wife_earns_more lhhd_inc age p_age age2 p_age2 kids i.edu4 i.p_edu4 i.wavey i.state
+reghdfe hwork wife_earns_more lhhd_inc age p_age age2 p_age2 kids i.edu4 i.p_edu4, absorb(wavey state)
 restore
 
 *Panel A (2)
+preserve
+keep if female == 1 & east == 1
+reghdfe hwork wife_earns_more lhhd_inc age p_age age2 p_age2 kids i.edu4 i.p_edu4, absorb(wavey state)
+restore
+
+*Panel A (3)
+preserve
+keep if female == 1
+reghdfe hwork wife_earns_more wife_east east lhhd_inc age p_age age2 p_age2 kids i.edu4 i.p_edu4, absorb(wavey state)
+restore
