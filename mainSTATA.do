@@ -147,12 +147,16 @@ replace p_edu4 = female_ed if female == 0
 drop male_ed female_ed
 
 *Income variables
-bysort wave cpf_hid (female)
+bysort wave cpf_hid (female): gen p_income = incjob1_mn[1] if female == 1
+bysort wave cpf_hid (female): replace p_income = incjob1_mn[2] if female == 0
+
+gen linc = log(incjob1_mn)
+gen plinc = log(p_income)
+gen lhhd_inc = log(total_incjob1_mn)
 
 *Other dummies
 *note missing values with log income
-gen linc = log(incjob1_mn)
-gen lhhd_inc = log(total_incjob1_mn)
+
 gen age2 = age^2
 gen p_age2 = p_age^2
 gen kids = (kidsn_hh17 != 0)
@@ -167,17 +171,17 @@ gen wife_east = wife_earns_more * east
 *Panel A (1)
 preserve
 keep if female == 1 & west == 1
-reghdfe hwork wife_earns_more lhhd_inc linc age p_age age2 p_age2 kids i.edu4 i.p_edu4, absorb(wavey state)
+reghdfe hwork wife_earns_more income_share lhhd_inc linc plinc age p_age age2 p_age2 kids i.edu4 i.p_edu4, absorb(wavey state)
 restore
 
 *Panel A (2)
 preserve
 keep if female == 1 & east == 1
-reghdfe hwork wife_earns_more lhhd_inc age p_age age2 p_age2 kids i.edu4 i.p_edu4, absorb(wavey state)
+reghdfe hwork wife_earns_more income_share lhhd_inc linc plinc age p_age age2 p_age2 kids i.edu4 i.p_edu4, absorb(wavey state)
 restore
 
 *Panel A (3)
 preserve
 keep if female == 1
-reghdfe hwork wife_earns_more wife_east east lhhd_inc age p_age age2 p_age2 kids i.edu4 i.p_edu4, absorb(wavey state)
+reghdfe hwork wife_earns_more wife_east east income_share lhhd_inc linc plinc age p_age age2 p_age2 kids i.edu4 i.p_edu4, absorb(wavey state)
 restore
