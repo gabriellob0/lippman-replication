@@ -33,6 +33,7 @@ drop if missing(errand, hwork, repairs, hobbies)
 drop if edu4 == -1
 
 *Marriage dummies
+*TODO: Maybe use egen instead of the first replace and remove the gen lines
 gen married = 0
 sort wave cpf_hid female
 by wave cpf_hid: replace married = 1 if _N == 2
@@ -145,18 +146,28 @@ replace p_edu4 = female_ed if female == 0
 
 drop male_ed female_ed
 
+*Income variables
+bysort wave cpf_hid (female)
+
 *Other dummies
 *note missing values with log income
+gen linc = log(incjob1_mn)
 gen lhhd_inc = log(total_incjob1_mn)
 gen age2 = age^2
 gen p_age2 = p_age^2
 gen kids = (kidsn_hh17 != 0)
 gen wife_east = wife_earns_more * east
 
+*TODO: Check s.e. estimator. should be cluster(varlist); cpf_hid?
+*TODO: add interaction in the regression itself using ##
+*TODO: code variables as continuous using c.varname
+*TODO: separate samples using ifs within the regression
+*TODO: figure out the relative income variable thing, column 3 and 6
+
 *Panel A (1)
 preserve
 keep if female == 1 & west == 1
-reghdfe hwork wife_earns_more lhhd_inc age p_age age2 p_age2 kids i.edu4 i.p_edu4, absorb(wavey state)
+reghdfe hwork wife_earns_more lhhd_inc linc age p_age age2 p_age2 kids i.edu4 i.p_edu4, absorb(wavey state)
 restore
 
 *Panel A (2)
