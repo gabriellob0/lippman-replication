@@ -146,14 +146,78 @@ gen kids = (kidsn_hh17 != 0)
 *Panel A
 *(1)
 reghdfe hwork wife_earns_more income_share lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4 ///
-if female == 1 & west == 1, absorb(wavey state)
+if female == 1 & west == 1, absorb(wavey state) vce(cluster pid)
 
 *(2)
 reghdfe hwork wife_earns_more income_share lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4 ///
-if female == 1 & east == 1, absorb(wavey state)
+if female == 1 & east == 1, absorb(wavey state) vce(cluster pid)
 
 *(3)
-reghdfe hwork wife_earns_more c.wife_earns_more#c.east east income_share c.income_share#east lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4 ///
-if female == 1, absorb(wavey state)
+reghdfe hwork wife_earns_more c.wife_earns_more#c.east c.income_share##c.east lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4 ///
+if female == 1, absorb(wavey state) vce(cluster pid)
 
 *(4)
+reghdfe hwork wife_earns_more income_share lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4 ///
+if female == 1 & west == 1, absorb(wavey state pid) vce(cluster pid)
+
+*(5)
+reghdfe hwork wife_earns_more income_share lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4 ///
+if female == 1 & east == 1, absorb(wavey state pid) vce(cluster pid)
+
+*(6)
+reghdfe hwork wife_earns_more c.wife_earns_more#c.east c.income_share##c.east lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4 ///
+if female == 1, absorb(wavey state pid) vce(cluster pid)
+
+
+*Panel B
+*(1)
+reghdfe hwork wife_earns_more income_share lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4 ///
+if female == 0 & west == 1, absorb(wavey state) vce(cluster pid)
+
+*(2)
+reghdfe hwork wife_earns_more income_share lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4 ///
+if female == 0 & east == 1, absorb(wavey state) vce(cluster pid)
+
+*(3)
+reghdfe hwork wife_earns_more c.wife_earns_more#c.east c.income_share##c.east lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4 ///
+if female == 0, absorb(wavey state) vce(cluster pid)
+
+*(4)
+reghdfe hwork wife_earns_more income_share lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4 ///
+if female == 0 & west == 1, absorb(wavey state pid) vce(cluster pid)
+
+*(5)
+reghdfe hwork wife_earns_more income_share lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4 ///
+if female == 0 & east == 1, absorb(wavey state pid) vce(cluster pid)
+
+*(6)
+reghdfe hwork wife_earns_more c.wife_earns_more#c.east c.income_share##c.east lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4 ///
+if female == 0, absorb(wavey state pid) vce(cluster pid)
+
+
+*Panel C
+*TODO: create the correct dep. var.
+
+*(1)
+reghdfe hwork wife_earns_more income_share lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4 ///
+if west == 1, absorb(wavey state) vce(cluster pid)
+
+*(2)
+reghdfe hwork wife_earns_more income_share lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4 ///
+if east == 1, absorb(wavey state) vce(cluster pid)
+
+*(3)
+reghdfe hwork wife_earns_more c.wife_earns_more#c.east c.income_share##c.east lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4 ///
+, absorb(wavey state) vce(cluster pid)
+
+*(4)
+reghdfe hwork wife_earns_more income_share lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4 ///
+if west == 1, absorb(wavey state pid) vce(cluster pid)
+
+*(5)
+reghdfe hwork wife_earns_more income_share lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4 ///
+if east == 1, absorb(wavey state pid) vce(cluster pid)
+
+*(6)
+reghdfe hwork wife_earns_more c.wife_earns_more#c.east c.income_share##c.east lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4 ///
+, absorb(wavey state pid) vce(cluster pid)
