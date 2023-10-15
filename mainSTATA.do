@@ -64,6 +64,7 @@ bysort wave cpf_hid (female): replace female_income_share = female_income_share[
 
 
 *Figure 2 ----
+*TODO: I can also use twoway here
 kdensity female_income_share if female == 1 & east == 1
 kdensity female_income_share if female == 1 & west == 1
 
