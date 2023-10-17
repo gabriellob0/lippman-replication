@@ -151,30 +151,62 @@ local cross_sec_controls female_income_share lhhd_inc linc plinc c.age##c.age c.
 local longitudinal_controls c.income_share##c.east lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4
 
 *Panel A
-reghdfe hwork wife_earns_more `cross_sec_controls' if female == 1 & west == 1, absorb(wavey state) vce(cluster pid) //(1)
-reghdfe hwork wife_earns_more `cross_sec_controls' if female == 1 & east == 1, absorb(wavey state) vce(cluster pid) //(2)
-reghdfe hwork wife_earns_more c.wife_earns_more#c.east `longitudinal_controls' if female == 1, absorb(wavey state) vce(cluster pid) //(3)
+eststo: reghdfe hwork wife_earns_more `cross_sec_controls' if female == 1 & west == 1, absorb(wavey state) vce(cluster pid) //(1)
+eststo: reghdfe hwork wife_earns_more `cross_sec_controls' if female == 1 & east == 1, absorb(wavey state) vce(cluster pid) //(2)
+eststo: reghdfe hwork wife_earns_more c.wife_earns_more#c.east `longitudinal_controls' if female == 1, absorb(wavey state) vce(cluster pid) //(3)
 
-reghdfe hwork wife_earns_more `cross_sec_controls' if female == 1 & west == 1, absorb(wavey state pid) vce(cluster pid) //(4)
-reghdfe hwork wife_earns_more `cross_sec_controls' if female == 1 & east == 1, absorb(wavey state pid) vce(cluster pid) //(5)
-reghdfe hwork wife_earns_more c.wife_earns_more#c.east `longitudinal_controls' if female == 1, absorb(wavey state pid) vce(cluster pid) //(6)
+eststo: reghdfe hwork wife_earns_more `cross_sec_controls' if female == 1 & west == 1, absorb(wavey state pid) vce(cluster pid) //(4)
+eststo: reghdfe hwork wife_earns_more `cross_sec_controls' if female == 1 & east == 1, absorb(wavey state pid) vce(cluster pid) //(5)
+eststo: reghdfe hwork wife_earns_more c.wife_earns_more#c.east `longitudinal_controls' if female == 1, absorb(wavey state pid) vce(cluster pid) //(6)
 
+esttab using "reports\figures\figure3.rtf", ///
+b(%9.3f) se(%9.3f) star(* .10 ** .05 *** .01) ///
+mtitles(West East All West East All) coeflabels(wife_earns_more WifeEarnsMore c.wife_earns_more#c.east WifeEarnsMore×East east East) nonotes ///
+noomitted keep(wife_earns_more c.wife_earns_more#c.east east) ///
+stats(N, fmt(0 0) label("Observations")) ///
+replace
+eststo clear
 
 *Panel B
-reghdfe hwork wife_earns_more `cross_sec_controls' if female == 0 & west == 1, absorb(wavey state) vce(cluster pid) //(1)
-reghdfe hwork wife_earns_more `cross_sec_controls' if female == 0 & east == 1, absorb(wavey state) vce(cluster pid) //(2)
-reghdfe hwork wife_earns_more c.wife_earns_more#c.east `longitudinal_controls' if female == 0, absorb(wavey state) vce(cluster pid) //(3)
+local cross_sec_controls female_income_share lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4
+local longitudinal_controls c.income_share##c.east lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4
 
-reghdfe hwork wife_earns_more `cross_sec_controls' if female == 0 & west == 1, absorb(wavey state pid) vce(cluster pid) //(4)
-reghdfe hwork wife_earns_more `cross_sec_controls' if female == 0 & east == 1, absorb(wavey state pid) vce(cluster pid) //(5)
-reghdfe hwork wife_earns_more c.wife_earns_more#c.east `longitudinal_controls' if female == 0, absorb(wavey state pid) vce(cluster pid) //(6)
+eststo: reghdfe hwork wife_earns_more `cross_sec_controls' if female == 0 & west == 1, absorb(wavey state) vce(cluster pid) //(1)
+eststo: reghdfe hwork wife_earns_more `cross_sec_controls' if female == 0 & east == 1, absorb(wavey state) vce(cluster pid) //(2)
+eststo: reghdfe hwork wife_earns_more c.wife_earns_more#c.east `longitudinal_controls' if female == 0, absorb(wavey state) vce(cluster pid) //(3)
 
+eststo: reghdfe hwork wife_earns_more `cross_sec_controls' if female == 0 & west == 1, absorb(wavey state pid) vce(cluster pid) //(4)
+eststo: reghdfe hwork wife_earns_more `cross_sec_controls' if female == 0 & east == 1, absorb(wavey state pid) vce(cluster pid) //(5)
+eststo: reghdfe hwork wife_earns_more c.wife_earns_more#c.east `longitudinal_controls' if female == 0, absorb(wavey state pid) vce(cluster pid) //(6)
+
+esttab using "reports\figures\figure3.rtf", ///
+b(%9.3f) se(%9.3f) star(* .10 ** .05 *** .01) ///
+nomtitles nonumbers coeflabels(wife_earns_more WifeEarnsMore c.wife_earns_more#c.east WifeEarnsMore×East east East) nonotes ///
+noomitted keep(wife_earns_more c.wife_earns_more#c.east east) ///
+stats(N, fmt(0 0) label("Observations")) ///
+append
+eststo clear
 
 *Panel C
-reghdfe hwork_gap wife_earns_more `cross_sec_controls' if female == 0 & west == 1, absorb(wavey state) vce(cluster pid) //(1)
-reghdfe hwork_gap wife_earns_more `cross_sec_controls' if female == 0 & east == 1, absorb(wavey state) vce(cluster pid) //(2)
-reghdfe hwork_gap wife_earns_more c.wife_earns_more#c.east `longitudinal_controls' if female == 0, absorb(wavey state) vce(cluster pid) //(3)
+eststo: reghdfe hwork_gap wife_earns_more `cross_sec_controls' if female == 0 & west == 1, absorb(wavey state) vce(cluster pid) //(1)
+estadd local fe "No"
+eststo: reghdfe hwork_gap wife_earns_more `cross_sec_controls' if female == 0 & east == 1, absorb(wavey state) vce(cluster pid) //(2)
+estadd local fe "No"
+eststo: reghdfe hwork_gap wife_earns_more c.wife_earns_more#c.east `longitudinal_controls' if female == 0, absorb(wavey state) vce(cluster pid) //(3)
+estadd local fe "No"
 
-reghdfe hwork_gap wife_earns_more `cross_sec_controls' if female == 0 & west == 1, absorb(wavey state pid) vce(cluster pid) //(4)
-reghdfe hwork_gap wife_earns_more `cross_sec_controls' if female == 0 & east == 1, absorb(wavey state pid) vce(cluster pid) //(5)
-reghdfe hwork_gap wife_earns_more c.wife_earns_more#c.east `longitudinal_controls' if female == 0, absorb(wavey state pid) vce(cluster pid) //(6)
+eststo: reghdfe hwork_gap wife_earns_more `cross_sec_controls' if female == 0 & west == 1, absorb(wavey state pid) vce(cluster pid) //(4)
+estadd local fe "Yes"
+eststo: reghdfe hwork_gap wife_earns_more `cross_sec_controls' if female == 0 & east == 1, absorb(wavey state pid) vce(cluster pid) //(5)
+estadd local fe "Yes"
+eststo: reghdfe hwork_gap wife_earns_more c.wife_earns_more#c.east `longitudinal_controls' if female == 0, absorb(wavey state pid) vce(cluster pid) //(6)
+estadd local fe "Yes"
+
+esttab using "reports\figures\figure3.rtf", ///
+b(%9.3f) se(%9.3f) star(* .10 ** .05 *** .01) ///
+nomtitles nonumbers coeflabels(wife_earns_more WifeEarnsMore c.wife_earns_more#c.east WifeEarnsMore×East east East) ///
+noomitted keep(wife_earns_more c.wife_earns_more#c.east east) ///
+stats(N fe, fmt(0 0) label("Observations" "Individual fixed effects")) ///
+append
+*TODO: replace when saving file, rtc is format for word (but they have markdown)
+*TODO: might change diplay formats in se() and b()
