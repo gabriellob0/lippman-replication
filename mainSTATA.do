@@ -6,7 +6,7 @@ version 17
 
 
 *Imports ----
-cd "D:\OneDrive\Documentos\Bristol\Economics (Bsc)\Applied Economics Dissertation\lippman-replication"
+cd "D:\OneDrive\Documentos\Bristol\Economics (Bsc)\Applied Economics Dissertation\lippmann-replication"
 use "data\raw\gsoep.dta", clear
 
 *keep if cpf_hid == 607401
@@ -65,6 +65,7 @@ bysort wave cpf_hid (female): replace female_income_share = female_income_share[
 
 *Figure 2 ----
 *TODO: I can also use twoway here
+*TODO: Figure out if using the same package as they did would make a difference here
 kdensity female_income_share if female == 1 & east == 1
 kdensity female_income_share if female == 1 & west == 1
 
@@ -143,12 +144,10 @@ bysort wave cpf_hid: egen couple_hwork = total(hwork)
 gen hwork_gap = 2*hwork - couple_hwork if female == 1
 bysort wave cpf_hid (female): replace hwork_gap = hwork_gap[2] if missing(hwork_gap)
 
-*TODO: Check s.e. estimator. should be cluster(varlist); cpf_hid?
-*TODO: figure out the relative income variable thing, column 3 and 6
-*TODO: figure out if relative income is income ratio or share
+*NOTE: female vs male income share makes no different in all specifications
 
 *define a string with all controls (this should all instead be in a function, but stata sucks)
-local cross_sec_controls income_share lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4
+local cross_sec_controls female_income_share lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4
 local longitudinal_controls c.income_share##c.east lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4
 
 *Panel A
@@ -162,54 +161,20 @@ reghdfe hwork wife_earns_more c.wife_earns_more#c.east `longitudinal_controls' i
 
 
 *Panel B
-*(1)
-reghdfe hwork wife_earns_more income_share lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4 ///
-if female == 0 & west == 1, absorb(wavey state) vce(cluster pid)
+reghdfe hwork wife_earns_more `cross_sec_controls' if female == 0 & west == 1, absorb(wavey state) vce(cluster pid) //(1)
+reghdfe hwork wife_earns_more `cross_sec_controls' if female == 0 & east == 1, absorb(wavey state) vce(cluster pid) //(2)
+reghdfe hwork wife_earns_more c.wife_earns_more#c.east `longitudinal_controls' if female == 0, absorb(wavey state) vce(cluster pid) //(3)
 
-*(2)
-reghdfe hwork wife_earns_more income_share lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4 ///
-if female == 0 & east == 1, absorb(wavey state) vce(cluster pid)
-
-*(3)
-reghdfe hwork wife_earns_more c.wife_earns_more#c.east c.income_share##c.east lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4 ///
-if female == 0, absorb(wavey state) vce(cluster pid)
-
-*(4)
-reghdfe hwork wife_earns_more income_share lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4 ///
-if female == 0 & west == 1, absorb(wavey state pid) vce(cluster pid)
-
-*(5)
-reghdfe hwork wife_earns_more income_share lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4 ///
-if female == 0 & east == 1, absorb(wavey state pid) vce(cluster pid)
-
-*(6)
-reghdfe hwork wife_earns_more c.wife_earns_more#c.east c.income_share##c.east lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4 ///
-if female == 0, absorb(wavey state pid) vce(cluster pid)
+reghdfe hwork wife_earns_more `cross_sec_controls' if female == 0 & west == 1, absorb(wavey state pid) vce(cluster pid) //(4)
+reghdfe hwork wife_earns_more `cross_sec_controls' if female == 0 & east == 1, absorb(wavey state pid) vce(cluster pid) //(5)
+reghdfe hwork wife_earns_more c.wife_earns_more#c.east `longitudinal_controls' if female == 0, absorb(wavey state pid) vce(cluster pid) //(6)
 
 
 *Panel C
-*TODO: create the correct dep. var.
+reghdfe hwork_gap wife_earns_more `cross_sec_controls' if female == 0 & west == 1, absorb(wavey state) vce(cluster pid) //(1)
+reghdfe hwork_gap wife_earns_more `cross_sec_controls' if female == 0 & east == 1, absorb(wavey state) vce(cluster pid) //(2)
+reghdfe hwork_gap wife_earns_more c.wife_earns_more#c.east `longitudinal_controls' if female == 0, absorb(wavey state) vce(cluster pid) //(3)
 
-*(1)
-reghdfe hwork_gap wife_earns_more income_share lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4 ///
-if female == 1 & west == 1, absorb(wavey state) vce(cluster pid)
-
-*(2)
-reghdfe hwork_gap wife_earns_more income_share lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4 ///
-if east == 1, absorb(wavey state) vce(cluster pid)
-
-*(3)
-reghdfe hwork_gap wife_earns_more c.wife_earns_more#c.east c.income_share##c.east lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4 ///
-, absorb(wavey state) vce(cluster pid)
-
-*(4)
-reghdfe hwork_gap wife_earns_more income_share lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4 ///
-if west == 1, absorb(wavey state pid) vce(cluster pid)
-
-*(5)
-reghdfe hwork_gap wife_earns_more income_share lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4 ///
-if east == 1, absorb(wavey state pid) vce(cluster pid)
-
-*(6)
-reghdfe hwork_gap wife_earns_more c.wife_earns_more#c.east c.income_share##c.east lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4 ///
-, absorb(wavey state pid) vce(cluster pid)
+reghdfe hwork_gap wife_earns_more `cross_sec_controls' if female == 0 & west == 1, absorb(wavey state pid) vce(cluster pid) //(4)
+reghdfe hwork_gap wife_earns_more `cross_sec_controls' if female == 0 & east == 1, absorb(wavey state pid) vce(cluster pid) //(5)
+reghdfe hwork_gap wife_earns_more c.wife_earns_more#c.east `longitudinal_controls' if female == 0, absorb(wavey state pid) vce(cluster pid) //(6)
