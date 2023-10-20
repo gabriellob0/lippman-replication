@@ -28,7 +28,7 @@ but it does not mean that the partner is in the sample
  */
 
 keep if whweek >= 0 & incjob1_mg > 0 & incjob1_mn > 0 //only dual earner couples here
-drop if missing(errand, hwork, repairs, hobbies)
+drop if missing(hwork) // I might or might not want to drop more
 drop if edu4 == -1
 
 *Marriage dummies [married, straight]
