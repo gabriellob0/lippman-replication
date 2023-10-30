@@ -8,26 +8,29 @@ version 17
 *Imports ----
 cd "D:\OneDrive\Documentos\Bristol\Economics (Bsc)\Applied Economics Dissertation\lippmann-replication"
 use "data\raw\gsoep.dta", clear
+//net install cleanplots, from("https://tdmize.github.io/data/cleanplots")
+set scheme cleanplots
 
 
 *Cleaning ----
-/* Codebook shows pretty well the variables and help us decide what to clean.
-It seems like everything up to edu4 is fine, but edu4 itself contains some -1
-values, which I believe are missing.
-
+/*
+edu4 contains some -1 values, which I believe are missing.
 whweek has some negative values, so I will remove them. Same with the incomes.
 
-errand, hwork, ccare, repairs and hobbies all have missing variables. Not sure
-if we should remove them, either option gives wrong sample size.
+errand, hwork, ccare, repairs and hobbies all have missing variables.
+Will not remove since not in the regression.
 
-Importantly, it seems that the parstat6 identifies if a person is married,
-but it does not mean that the partner is in the sample
+Not all households have two members in the data for a given year, so I remove
+these. Same with homosexual couples.
  */
 keep if whweek >= 0 & incjob1_mg > 0 & incjob1_mn > 0 //only dual earner couples here
 drop if missing(hwork) | edu4 == -1 //other vars have missing, but not in regression
 
 //keep only heterosexual couples with both members on the data
 bysort wave cpf_hid (female): keep if _N == 2 & female[1] != female[2]
+
+//remove singletons to maintain consistent sample size accross specifications
+bysort pid: drop if _N == 1
 
 *Origin
 bysort wave cpf_hid: drop if loc89[1] != loc89[2] //only single origin couples
@@ -49,9 +52,10 @@ bysort wave cpf_hid (female): replace female_income_share = female_income_share[
 
 
 *Figure 2 ----
-*TODO: I can also use twoway here
-graph twoway kdensity female_income_share if female == 1 & east == 1, xline(0.5)
-graph twoway kdensity female_income_share if female == 1 & east == 0, xline(0.5)
+graph twoway kdensity female_income_share if female == 1 & east == 1, xline(0.5) name(graph1) title(East Germans) xlabel(#10) xtitle(Female Income Share) ytitle(Density)
+graph twoway kdensity female_income_share if female == 1 & east == 0, xline(0.5) name(graph2) title(West Germans) xlabel(#10) xtitle(Female Income Share) ytitle(Density)
+
+graph combine graph1 graph2, name(graph3)
 
 
 *Figure 3 ----
@@ -100,19 +104,19 @@ esttab using "reports\figures\figure3.rtf", ///
 b(%9.3f) se(%9.3f) star(* .10 ** .05 *** .01) ///
 mtitles(West East All West East All) coeflabels(wife_earns_more WifeEarnsMore c.wife_earns_more#c.east WifeEarnsMore×East east East) nonotes ///
 noomitted keep(wife_earns_more c.wife_earns_more#c.east east) ///
-stats(N, fmt(0 0) label("Observations")) ///
+stats(N, fmt(0 0) label("Observations")) title("Panel A --- Dependent Variable: Housework Time (hours per day)") ///
 replace
 eststo clear
 
 *Panel B
 local cross_sec_controls female_income_share lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4
-local longitudinal_controls c.income_share##c.east lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4
+local longitudinal_controls c.female_income_share##c.east lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4
 
-eststo: reghdfe hwork wife_earns_more `cross_sec_controls' if female == 0 & west == 1, absorb(wavey state) vce(cluster pid) //(1)
+eststo: reghdfe hwork wife_earns_more `cross_sec_controls' if female == 0 & east == 0, absorb(wavey state) vce(cluster pid) //(1)
 eststo: reghdfe hwork wife_earns_more `cross_sec_controls' if female == 0 & east == 1, absorb(wavey state) vce(cluster pid) //(2)
 eststo: reghdfe hwork wife_earns_more c.wife_earns_more#c.east `longitudinal_controls' if female == 0, absorb(wavey state) vce(cluster pid) //(3)
 
-eststo: reghdfe hwork wife_earns_more `cross_sec_controls' if female == 0 & west == 1, absorb(wavey state pid) vce(cluster pid) //(4)
+eststo: reghdfe hwork wife_earns_more `cross_sec_controls' if female == 0 & east == 0, absorb(wavey state pid) vce(cluster pid) //(4)
 eststo: reghdfe hwork wife_earns_more `cross_sec_controls' if female == 0 & east == 1, absorb(wavey state pid) vce(cluster pid) //(5)
 eststo: reghdfe hwork wife_earns_more c.wife_earns_more#c.east `longitudinal_controls' if female == 0, absorb(wavey state pid) vce(cluster pid) //(6)
 
@@ -120,19 +124,19 @@ esttab using "reports\figures\figure3.rtf", ///
 b(%9.3f) se(%9.3f) star(* .10 ** .05 *** .01) ///
 nomtitles nonumbers coeflabels(wife_earns_more WifeEarnsMore c.wife_earns_more#c.east WifeEarnsMore×East east East) nonotes ///
 noomitted keep(wife_earns_more c.wife_earns_more#c.east east) ///
-stats(N, fmt(0 0) label("Observations")) ///
+stats(N, fmt(0 0) label("Observations")) title("Panel B --- Dependent Variable: Housework Time (hours per day)") ///
 append
 eststo clear
 
 *Panel C
-eststo: reghdfe hwork_gap wife_earns_more `cross_sec_controls' if female == 0 & west == 1, absorb(wavey state) vce(cluster pid) //(1)
+eststo: reghdfe hwork_gap wife_earns_more `cross_sec_controls' if female == 0 & east == 0, absorb(wavey state) vce(cluster pid) //(1)
 estadd local fe "No"
 eststo: reghdfe hwork_gap wife_earns_more `cross_sec_controls' if female == 0 & east == 1, absorb(wavey state) vce(cluster pid) //(2)
 estadd local fe "No"
 eststo: reghdfe hwork_gap wife_earns_more c.wife_earns_more#c.east `longitudinal_controls' if female == 0, absorb(wavey state) vce(cluster pid) //(3)
 estadd local fe "No"
 
-eststo: reghdfe hwork_gap wife_earns_more `cross_sec_controls' if female == 0 & west == 1, absorb(wavey state pid) vce(cluster pid) //(4)
+eststo: reghdfe hwork_gap wife_earns_more `cross_sec_controls' if female == 0 & east == 0, absorb(wavey state pid) vce(cluster pid) //(4)
 estadd local fe "Yes"
 eststo: reghdfe hwork_gap wife_earns_more `cross_sec_controls' if female == 0 & east == 1, absorb(wavey state pid) vce(cluster pid) //(5)
 estadd local fe "Yes"
@@ -143,7 +147,7 @@ esttab using "reports\figures\figure3.rtf", ///
 b(%9.3f) se(%9.3f) star(* .10 ** .05 *** .01) ///
 nomtitles nonumbers coeflabels(wife_earns_more WifeEarnsMore c.wife_earns_more#c.east WifeEarnsMore×East east East) ///
 noomitted keep(wife_earns_more c.wife_earns_more#c.east east) ///
-stats(N fe, fmt(0 0) label("Observations" "Individual fixed effects")) ///
+stats(N fe, fmt(0 0) label("Observations" "Individual fixed effects")) title("Panel C --- Dependent Variable: Housework Time Gap (Woman's - Man's)") ///
 append
 *TODO: replace when saving file, rtc is format for word (but they have markdown)
 *TODO: might change diplay formats in se() and b()

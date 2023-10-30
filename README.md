@@ -2,13 +2,32 @@
 
 Replication of Lippmann et al. (2020) for AED.
 
+# Notes on data
+
+Need to check the person working too many hours.
+
+| Description            | Variable                  | Check           |
+|------------------------|---------------------------|-----------------|
+| From 1991 to 2012      | wavey                     | Yes             |
+|                        | female                    | No missing      |
+|                        | pid                       | No missing      |
+|                        | cpf_hid                   | No missing      |
+| Mixed couples excluded | loc89                     | Done            |
+| Dual earner only       | incjob1_mg and incjob1_mn | Done            |
+| Aged 18 to 65          | age                       | Yes             |
+|                        | edu4                      | Dropped missing |
+|                        | kidsn_hh17                | No missing      |
+|                        |                           |                 |
+
 # Notes on model specification
 
 ## Pooled OLS
 
+This corresponds to specifications 1 to 3
+
 | Replication package | Description           | Variable type                   |
 |--------------------|----------------------|------------------------------|
-| part_rev            | income share?         | [0, 1] share?                   |
+| part_rev            | income share?         | \[0, 1\] share?                 |
 | lrevf               | log revenue female    | continuous                      |
 | lrevh               | log revenue household | continuous                      |
 | lrevmen             | log revenue male      | continuous                      |
@@ -24,9 +43,11 @@ Replication of Lippmann et al. (2020) for AED.
 
 ## Fixed Effects OLS
 
+This corresponds to specifications 4 to 6
+
 | Replication package | Description                   | Variable type                   |
 |----------------------------|------------------------|--------------------|
-| part_rev            | income share?                 | [0, 1] share?                   |
+| part_rev            | income share?                 | \[0, 1\] share?                 |
 | part_rev_east       | partial revenue? times easthh | interaction dummy x continuous  |
 | easthh              | couple from east              | dummy                           |
 | lrevf               | log revenue female            | continuous                      |
