@@ -1,3 +1,11 @@
+---
+title: "Hello, Quarto"
+execute:
+  eval: false
+format: pdf
+---
+
+```{stata}
 *Settings ----
 clear all
 set more off
@@ -157,7 +165,4 @@ nomtitles nonumbers coeflabels(wife_earns_more WifeEarnsMore c.wife_earns_more#c
 noomitted keep(wife_earns_more c.wife_earns_more#c.east east) ///
 stats(N individuals fe, fmt(0 0) label("Observations" "Individuals" "Individual fixed effects")) title("Panel C: Couple --- Dependent Variable: Housework Time Gap (Woman's - Man's)") ///
 append
-*TODO: replace when saving file, rtc is format for word (but they have markdown)
-*TODO: might change diplay formats in se() and b()
-
-*keep if female == 0 & used == 0
+```
