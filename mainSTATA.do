@@ -8,9 +8,9 @@ version 17
 *Imports ----
 cd "D:\OneDrive\Documentos\Bristol\Economics (Bsc)\Applied Economics Dissertation\lippmann-replication"
 use "data\raw\gsoep.dta", clear
-//net install cleanplots, from("https://tdmize.github.io/data/cleanplots")
-set scheme cleanplots
 
+set scheme cleanplots //net install cleanplots, from("https://tdmize.github.io/data/cleanplots")
+//you will also need estout for this code
 
 *Cleaning ----
 /*
@@ -35,7 +35,7 @@ drop if pid == 2088902
 
 *Origin
 bysort wave cpf_hid: drop if loc89[1] != loc89[2] //only single origin couples
-bysort wave cpf_hid: gen east = (loc89[1] == 1 & loc89[2] == 1)
+bysort wave cpf_hid: gen east = (loc89[1] == 1 & loc89[2] == 1) //east dummy
 
 *Income
 bysort wave cpf_hid: egen max_inc_mg = max(incjob1_mg)
@@ -46,9 +46,9 @@ replace wife_earns_more = 1 if female == 0 & incjob1_mg != max_inc_mg
 
 *Income share
 bysort wave cpf_hid: egen total_incjob1_mg = total(incjob1_mg)
-bysort wave cpf_hid: egen hhd_inc = total(incjob1_mn) //household income uses net
+bysort wave cpf_hid: egen hhd_inc = total(incjob1_mn) //household income using net
 
-gen female_income_share = incjob1_mn / hhd_inc if female == 1
+gen female_income_share = incjob1_mn / hhd_inc if female == 1 //female gross income share
 bysort wave cpf_hid (female): replace female_income_share = female_income_share[2] if missing(female_income_share)
 
 
@@ -56,7 +56,8 @@ bysort wave cpf_hid (female): replace female_income_share = female_income_share[
 graph twoway kdensity female_income_share if female == 1 & east == 1, xline(0.5) name(graph1) title(East Germans) xlabel(#10) xtitle(Female Income Share) ytitle(Density)
 graph twoway kdensity female_income_share if female == 1 & east == 0, xline(0.5) name(graph2) title(West Germans) xlabel(#10) xtitle(Female Income Share) ytitle(Density)
 
-graph combine graph1 graph2, name(graph3)
+//to combine in stata
+//graph combine graph1 graph2, name(graph3)
 
 
 *Figure 3 ----
@@ -71,24 +72,36 @@ restore
 
 
 *Regression ----
+/*
+Specifications 1 to 3 are, respectively, West, East, and All. 4 - 6 the same,
+but with individual fixed effects.
+
+Panels A, B, and C are, respectively, Women, Men, and Couples.
+The dependent variable for A and B is housework hours, and for C is the difference.
+
+We set a local macro with controls, which need to be run simutaneously with the
+regression.
+
+We generate tables with esttab, and append it after each panel.
+ */
+
 *Additional dummies
 bysort wave cpf_hid (female): gen p_age = cond(female == 0, age[2], age[1]) //partner age
 bysort wave cpf_hid (female): gen p_edu4 = cond(female == 0, edu4[2], edu4[1]) //partner education
 bysort wave cpf_hid (female): gen p_income = cond(female == 0, incjob1_mg[2], incjob1_mg[1]) //partner income
 gen kids = (kidsn_hh17 != 0)
 
-gen linc = log(incjob1_mg)
-gen plinc = log(p_income)
-gen lhhd_inc = log(hhd_inc)
+gen linc = log(incjob1_mg) //log of income
+gen plinc = log(p_income) //log of partner income
+gen lhhd_inc = log(hhd_inc) //log of household income
 
-*Housework gap
+*Housework gap (women's - men's)
 bysort wave cpf_hid: egen couple_hwork = total(hwork)
 gen hwork_gap = 2*hwork - couple_hwork if female == 1
 bysort wave cpf_hid (female): replace hwork_gap = hwork_gap[2] if missing(hwork_gap)
 
-*NOTE: female vs male income share makes no different in all specifications
 
-*define a string with all controls (this should all instead be in a function, but stata sucks)
+//define a string with all controls (this should all instead be in a function, but Stata does not allow for good coding practices)
 local cross_sec_controls female_income_share lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4
 local longitudinal_controls c.female_income_share##c.east lhhd_inc linc plinc c.age##c.age c.p_age##c.p_age kids i.edu4 i.p_edu4
 
@@ -157,7 +170,3 @@ nomtitles nonumbers coeflabels(wife_earns_more WifeEarnsMore c.wife_earns_more#c
 noomitted keep(wife_earns_more c.wife_earns_more#c.east east) ///
 stats(N individuals fe, fmt(0 0) label("Observations" "Individuals" "Individual fixed effects")) title("Panel C: Couple --- Dependent Variable: Housework Time Gap (Woman's - Man's)") ///
 append
-*TODO: replace when saving file, rtc is format for word (but they have markdown)
-*TODO: might change diplay formats in se() and b()
-
-*keep if female == 0 & used == 0
