@@ -1,6 +1,6 @@
 # lippmann-replication
 
-Replication of Lippmann et al. (2020) for AED.
+Replication of Lippmann et al. (2020) for AED. Raw data not included.
 
 # Notes on data
 
